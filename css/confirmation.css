@@ -1,0 +1,198 @@
+
+div.gf_checkout_review_table_wrapper {
+    width:80%;
+    margin: 16px auto;
+}
+table.gf_checkout_review_table {
+    border-spacing: 0;
+    clear: both;
+    margin: 0;
+    width: 100%;
+    border-radius: 3px 3px 3px 3px;
+    border-style: solid;
+    border-width: 1px;
+    background-color: #FFF;
+    border-color: #DFDFDF;
+}
+table.gf_checkout_review_table {
+
+}
+table.gf_checkout_review_table.fixed {
+    table-layout: fixed;
+}
+table.gf_checkout_review_table td.gf_checkout_review_table_title {
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+    background-color: #F1F1F1;
+    background-image: -moz-linear-gradient(center top , #F9F9F9, #ECECEC);
+    text-align:left;
+    font-weight: bold;
+}
+table.gf_checkout_review_table th {
+    color: #053364;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+    background-color: #EAF2FA;
+    border-bottom: 1px solid #c9d7ec;
+    border-top:1px solid #FFF;
+    text-align:left;
+    font-weight: bold;
+}
+table.gf_checkout_review_table th.gf_checkout_review_item_price_label,
+table.gf_checkout_review_table th.gf_checkout_review_item_quantity_label {
+    text-align: center;
+    padding: 0 1em
+}
+table.gf_checkout_review_table tr.gf_checkout_review_total_row td {
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+    background-color: #FFFBCC;
+    border-bottom: 1px solid #E6DB55;
+    border-top:1px solid #FFF;
+    text-align:left;
+    font-weight: bold;
+}
+table.gf_checkout_review_table td {
+    border-bottom: 1px solid #DFDFDF;
+    border-top:1px solid #FFF;
+}
+table.gf_checkout_review_table th,
+table.gf_checkout_review_table td {
+    overflow: hidden;
+    line-height: 2em;
+    padding-left: 1em;
+}
+table.gf_checkout_review_table tr.gf_checkout_review_oddrow {
+    background-color:#FFF;
+}
+table.gf_checkout_review_table tr.gf_checkout_review_evenrow {
+    background-color:#FBFBFB;
+}
+table.gf_checkout_review_table tr.gf_checkout_review_evenrow td {
+    border-tip: 1px solid #FFF
+}
+
+table.gf_checkout_review_table td.gf_checkout_review_item_price,
+table.gf_checkout_review_table td.gf_checkout_review_item_name,
+table.gf_checkout_review_table td.gf_checkout_review_item_subtotal {
+    border-left:1px solid #DFDFDF
+}
+
+table.gf_checkout_review_table td.gf_checkout_review_item_price,
+table.gf_checkout_review_table td.gf_checkout_review_item_quantity,
+table.gf_checkout_review_table td.gf_checkout_review_item_subtotal,
+table.gf_checkout_review_table td.gf_checkout_review_item_total {
+    padding: 0 1em
+}
+table.gf_checkout_review_table td.gf_checkout_review_item_price,
+table.gf_checkout_review_table td.gf_checkout_review_item_subtotal,
+table.gf_checkout_review_table td.gf_checkout_review_item_total {
+    text-align: right
+}
+table.gf_checkout_review_table td.gf_checkout_review_item_quantity {
+    text-align: center
+}
+
+table.gf_checkout_review_table td span.gf_checkout_review_item_description {
+    display:block;
+    font-size: .8em;
+    margin: 1em 3em 1.6em 2em;
+    line-height: 1.4em;
+    max-height: 8em;
+    overflow: auto
+}
+
+table.gf_checkout_review_table tr.gf_checkout_review_subtotalrow td {
+    background-color: #eee;
+    border-top: 2px solid #DFDFDF
+}
+
+table.gf_checkout_review_table tr.gf_checkout_review_totalrow td {
+    background-color: #FFFBCC;
+    border-top: 2px solid #FAD05C
+}
+
+table.gf_checkout_review_table tr.gf_checkout_review_totalrow td.gf_checkout_review_item_total,
+table.gf_checkout_review_table tr.gf_checkout_review_totalrow td.gf_checkout_review_total_label,
+table.gf_checkout_review_table tr.gf_checkout_review_subtotalrow td.gf_checkout_review_item_subtotal,
+table.gf_checkout_review_table tr.gf_checkout_review_subtotalrow td.gf_checkout_review_subtotal_label {
+    padding: 1.5em 1em;
+    text-shadow: 0 1px 1px #fff;
+    font-weight: bold;
+    text-align: right
+}
+table.gf_checkout_review_table tr.gf_checkout_review_totalrow td.gf_checkout_review_item_total,
+table.gf_checkout_review_table tr.gf_checkout_review_totalrow td.gf_checkout_review_total_label {
+    padding: 1.5em 1em
+}
+table.gf_checkout_review_table tr.gf_checkout_review_subtotalrow td.gf_checkout_review_item_subtotal,
+table.gf_checkout_review_table tr.gf_checkout_review_subtotalrow td.gf_checkout_review_subtotal_label {
+    padding: 0 1em
+}
+
+div.gf_checkout_review_table_wrapper div.gf_checkout_review_button_wrapper {
+      margin: 2em 0;
+      min-height: 1em
+}
+
+div.gf_checkout_review_table_wrapper button.gf_checkout_review_button {
+    background: #fceabb;
+    background: -moz-linear-gradient(top,  #fceabb 0%, #fccd4d 50%, #f8b500 51%, #fbdf93 100%);
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#fceabb), color-stop(50%,#fccd4d), color-stop(51%,#f8b500), color-stop(100%,#fbdf93));
+    background: -webkit-linear-gradient(top,  #fceabb 0%,#fccd4d 50%,#f8b500 51%,#fbdf93 100%);
+    background: -o-linear-gradient(top,  #fceabb 0%,#fccd4d 50%,#f8b500 51%,#fbdf93 100%);
+    background: -ms-linear-gradient(top,  #fceabb 0%,#fccd4d 50%,#f8b500 51%,#fbdf93 100%);
+    background: linear-gradient(to bottom,  #fceabb 0%,#fccd4d 50%,#f8b500 51%,#fbdf93 100%);
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#fceabb', endColorstr='#fbdf93',GradientType=0 );
+    border-left: 1px solid #FAD05C;
+    border-top: 1px solid #FAD05C;
+    border-bottom: 1px solid #F8B500;
+    border-right: 1px solid #F8B500;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+    -webkit-box-shadow: inset 0 1px 0 0 white, 0 1px 0 0 #d5d5d5, 0 -1px 2px 1px #efefef;
+    -moz-box-shadow: inset 0 1px 0 0 white, 0 1px 0 0 #d5d5d5, 0 -1px 2px 1px #efefef;
+    box-shadow: inset 0 1px 0 0 white, 0 1px 0 0 #d5d5d5, 0 -1px 2px 1px #efefef;
+    color: #053364;
+    font: bold 16px "helvetica neue", helvetica, arial, sans-serif;
+    font-style: italic;
+    margin: 0;
+    padding: 7px 0;
+    text-shadow: 0 1px 1px #fff;
+    width: 150px;
+    float:right
+}
+div.gf_checkout_review_table_wrapper button.gf_checkout_review_button:hover {
+    background: #fceabb;
+    background: -moz-linear-gradient(top,  #fceabb 0%, #fccd4d 50%, #f8b500 51%, #fbdf93 100%);
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#fceabb), color-stop(50%,#fccd4d), color-stop(51%,#f8b500), color-stop(100%,#fbdf93));
+    background: -webkit-linear-gradient(top,  #fceabb 0%,#fccd4d 50%,#f8b500 51%,#fbdf93 100%);
+    background: -o-linear-gradient(top,  #fceabb 0%,#fccd4d 50%,#f8b500 51%,#fbdf93 100%);
+    background: -ms-linear-gradient(top,  #fceabb 0%,#fccd4d 50%,#f8b500 51%,#fbdf93 100%);
+    background: linear-gradient(to bottom,  #fceabb 0%,#fccd4d 50%,#f8b500 51%,#fbdf93 100%);
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#fceabb', endColorstr='#fbdf93',GradientType=0 );
+    border-left: 1px solid #FAD05C;
+    border-top: 1px solid #FAD05C;
+    border-bottom: 1px solid #F8B500;
+    border-right: 1px solid #F8B500;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+    -webkit-box-shadow: inset 0 1px 0 0 white, 0 1px 0 0 #d5d5d5, 0 -1px 2px 1px #e3e3e3;
+    -moz-box-shadow: inset 0 1px 0 0 white, 0 1px 0 0 #d5d5d5, 0 -1px 2px 1px #e3e3e3;
+    box-shadow: inset 0 1px 0 0 white, 0 1px 0 0 #d5d5d5, 0 -1px 2px 1px #e3e3e3;
+    cursor: pointer;
+    margin-top: 1px
+}
+div.gf_checkout_review_table_wrapper button.gf_checkout_review_button:active {
+    -webkit-box-shadow: inset 0 0 30px 0 #F8B90D, 0 1px 0 0 white;
+    -moz-box-shadow: inset 0 0 30px 0 #F8B90D, 0 1px 0 0 white;
+    box-shadow: inset 0 0 30px 0 #F8B90D, 0 1px 0 0 white;
+}
+
+
+div.gf_checkout_review_table_wrapper div.gf_checkout_review_button_wrapper span.gf_checkout_review_notes {
+    font-size: .8em;
+    line-height: 1.4em;
+    display:block;
+    max-width: 70%
+}
+
