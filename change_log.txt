@@ -1,4 +1,14 @@
 -----------------------------------------------------------
+Version 1.7
+    - Updated minimum Gravity Forms version to 1.9.14.
+    - Updated to prevent feed processing if honeypot validation has failed or when the partial entries add-on triggers validation on a heartbeat.
+    - Updated implementation of gform_enable_entry_info_payment_details to use add_filter instead of add_action.
+    - Updated GFFormsModel::update_lead() usages to GFAPI::update_entry().
+    - Fixed an issue with the billing address values being empty when the Address field copy values feature is enabled and the source field has a value.
+    - Fixed PHP notice on plugins page due to undefined constant RG_CURRENT_PAGE.
+    - Fixed PHP notice on entry detail page.
+
+-----------------------------------------------------------
 Version 1.6
     - Fixed an issue with the payment details panel on the entry detail page.
     - Fixed a PHP notice related to logging.
