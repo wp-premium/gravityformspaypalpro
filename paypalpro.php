@@ -3,7 +3,7 @@
 Plugin Name: Gravity Forms PayPal Pro Add-On
 Plugin URI: http://www.gravityforms.com
 Description: Integrates Gravity Forms with PayPal Pro, enabling end users to purchase goods and services through Gravity Forms.
-Version: 1.6
+Version: 1.7
 Author: rocketgenius
 Author URI: http://www.rocketgenius.com
 Text Domain: gravityformspaypalpro
@@ -37,8 +37,8 @@ class GFPayPalPro {
     private static $path = "gravityformspaypalpro/paypalpro.php";
     private static $url = "http://www.gravityforms.com";
     private static $slug = "gravityformspaypalpro";
-    private static $version = "1.6";
-    private static $min_gravityforms_version = "1.6.4.2.5";
+    private static $version = "1.7";
+    private static $min_gravityforms_version = "1.9.14";
     private static $production_url = "https://api-3t.paypal.com/nvp";
     private static $sandbox_url = "https://api-3t.sandbox.paypal.com/nvp";
     public static $production_express_checkout_url = "https://www.paypal.com/cgi-bin/webscr";
@@ -54,14 +54,18 @@ class GFPayPalPro {
     	//supports logging
 		add_filter("gform_logging_supported", array("GFPayPalPro", "set_logging_supported"));
 
-        if(RG_CURRENT_PAGE == "plugins.php"){
-            //loading translations
-            load_plugin_textdomain('gravityformspaypalpro', FALSE, '/gravityformspaypalpro/languages' );
+        if( defined( 'RG_CURRENT_PAGE' ) ){
 
-            add_action('after_plugin_row_' . self::$path, array('GFPayPalPro', 'plugin_row') );
+            if( RG_CURRENT_PAGE == "plugins.php" ){
+                //loading translations
+                load_plugin_textdomain('gravityformspaypalpro', FALSE, '/gravityformspaypalpro/languages' );
 
-            //force new remote request for version info on the plugin page
-            self::flush_version_info();
+                add_action('after_plugin_row_' . self::$path, array('GFPayPalPro', 'plugin_row') );
+
+                //force new remote request for version info on the plugin page
+                self::flush_version_info();
+            }
+
         }
 
         if(!self::is_gravityforms_supported())
@@ -121,7 +125,7 @@ class GFPayPalPro {
             }
             else if(RGForms::get("page") == "gf_entries"){
                 add_action('gform_entry_info',array("GFPayPalPro", "paypalpro_entry_info"), 10, 2);
-	            add_action( 'gform_enable_entry_info_payment_details', array( 'GFPayPalPro', 'disable_entry_info_payment' ), 10, 2 );
+	            add_filter( 'gform_enable_entry_info_payment_details', array( 'GFPayPalPro', 'disable_entry_info_payment' ), 10, 2 );
 
             }
         }
@@ -1294,7 +1298,7 @@ class GFPayPalPro {
     private static function cancel_subscription($lead){
 
         $lead["payment_status"] = "Canceled";
-        RGFormsModel::update_lead($lead);
+        GFAPI::update_entry($lead);
 
         $config = self::get_config_by_entry($lead["id"]);
         if(!$config)
@@ -2113,10 +2117,20 @@ class GFPayPalPro {
     }
 
     private static function is_ready_for_capture($validation_result){
+        $form            = $validation_result['form'];
+        $is_last_page    = GFFormDisplay::is_last_page( $form );
+        $failed_honeypot = false;
 
-        //if form has already failed validation or this is not the last page, abort
-        if($validation_result["is_valid"] == false || !self::is_last_page($validation_result["form"]))
+        if ( $is_last_page && rgar( $form, 'enableHoneypot' ) ) {
+            $honeypot_id     = GFFormDisplay::get_max_field_id( $form ) + 1;
+            $failed_honeypot = ! rgempty( "input_{$honeypot_id}" );
+        }
+
+        $is_heartbeat = rgpost( 'action' ) == 'heartbeat'; // Validation called by partial entries feature via the heartbeat API.
+
+        if ( ! $validation_result['is_valid'] || ! $is_last_page || $failed_honeypot || $is_heartbeat ) {
             return false;
+        }
 
         //getting config that matches condition (if conditions are enabled)
         $config = self::get_config($validation_result["form"]);
@@ -2667,12 +2681,14 @@ class GFPayPalPro {
         if($config["meta"]["api_settings_enabled"] == 1)
              $local_api_settings = self::get_local_api_settings($config);
 
+        $lead = RGFormsModel::create_lead( $validation_result["form"] );
+
         // Billing
         $card_field = self::get_creditcard_field($validation_result["form"]);
         $card_number = rgpost("input_{$card_field["id"]}_1");
         $card_type = GFCommon::get_card_type($card_number);
         $expiration_date = rgpost("input_{$card_field["id"]}_2");
-        $country = rgpost('input_'. str_replace(".", "_",$config["meta"]["customer_fields"]["country"]));
+        $country = rgar( $lead, $config["meta"]["customer_fields"]["country"] );
         $country = class_exists( 'GF_Field_Address' ) ? GF_Fields::get( 'address' )->get_country_code( $country ) : GFCommon::get_country_code( $country );
 
         $billing = array();
@@ -2680,20 +2696,19 @@ class GFPayPalPro {
         $billing['ACCT'] = $card_number;
         $billing['EXPDATE'] = $expiration_date[0].$expiration_date[1];
         $billing['CVV2'] = rgpost("input_{$card_field["id"]}_3");
-        $billing['STREET'] = rgpost('input_'. str_replace(".", "_",$config["meta"]["customer_fields"]["address1"]));
-        $billing['STREET2'] = rgpost('input_'. str_replace(".", "_",$config["meta"]["customer_fields"]["address2"]));
-        $billing['CITY'] = rgpost('input_'. str_replace(".", "_",$config["meta"]["customer_fields"]["city"]));
-        $billing['STATE'] = rgpost('input_'. str_replace(".", "_",$config["meta"]["customer_fields"]["state"]));
-        $billing['ZIP'] = rgpost('input_'. str_replace(".", "_",$config["meta"]["customer_fields"]["zip"]));
+        $billing['STREET'] = rgar( $lead, $config["meta"]["customer_fields"]["address1"] );
+        $billing['STREET2'] = rgar( $lead, $config["meta"]["customer_fields"]["address2"] );
+        $billing['CITY'] = rgar( $lead, $config["meta"]["customer_fields"]["city"] );
+        $billing['STATE'] = rgar( $lead, $config["meta"]["customer_fields"]["state"] );
+        $billing['ZIP'] = rgar( $lead, $config["meta"]["customer_fields"]["zip"] );
         $billing['COUNTRYCODE'] = $country == "UK" ? "GB" : $country;
         $billing['CURRENCYCODE'] = GFCommon::get_currency();
 
         // Customer Contact
-        $billing['FIRSTNAME'] = rgpost('input_'. str_replace(".", "_",$config["meta"]["customer_fields"]["first_name"]));
-        $billing['LASTNAME'] = rgpost('input_'. str_replace(".", "_",$config["meta"]["customer_fields"]["last_name"]));
-        $billing['EMAIL'] = rgpost('input_'. str_replace(".", "_",$config["meta"]["customer_fields"]["email"]));
+        $billing['FIRSTNAME'] = rgar( $lead, $config["meta"]["customer_fields"]["first_name"] );
+        $billing['LASTNAME'] = rgar( $lead, $config["meta"]["customer_fields"]["last_name"] );
+        $billing['EMAIL'] = rgar( $lead, $config["meta"]["customer_fields"]["email"] );
 
-        $lead = RGFormsModel::create_lead($validation_result["form"]);
         $product_billing_data = self::get_product_billing_data($validation_result["form"], $lead, $config);
         $amount = $product_billing_data["amount"];
         $products = $product_billing_data["products"];
@@ -2968,7 +2983,7 @@ class GFPayPalPro {
         $entry["transaction_id"] = $transaction_id;
         $entry["transaction_type"] = $is_recurring ? "2" : "1";
         $entry["is_fulfilled"] = !$is_pending;
-        RGFormsModel::update_lead($entry);
+        GFAPI::update_entry($entry);
     }
 
     public static function process_ipn($wp){
@@ -3068,7 +3083,7 @@ class GFPayPalPro {
 
                     //Marking entry as Active
                     $entry["payment_status"] = "Active";
-                    RGFormsModel::update_lead($entry);
+                    GFAPI::update_entry($entry);
 
                     //Update transaction with transaction_id and payment amount
                     $transactions = GFPayPalProData::get_transactions("signup", $subscriber_id);
@@ -3111,7 +3126,7 @@ class GFPayPalPro {
                         RGFormsModel::add_note($entry["id"], $user_id, $user_name, sprintf(__("Subscription has successfully completed its billing schedule. Subscriber Id: %s", "gravityformspaypalpro"), $subscriber_id));
                     }
 
-                    RGFormsModel::update_lead($entry);
+                    GFAPI::update_entry($entry);
                     GFPayPalProData::insert_transaction($entry["id"], $config["id"], "payment", $subscriber_id, $transaction_id, $parent_transaction_id, $amount);
 
                     //fulfilling order
@@ -3130,20 +3145,20 @@ class GFPayPalPro {
                     $entry["payment_status"] = "Failed";
                     RGFormsModel::add_note($entry["id"], $user_id, $user_name, sprintf(__("Subscription payment failed due to a transaction decline, rejection, or error. Subscriber Id: %s", "gravityformspaypalpro"), $subscriber_id));
                 }
-                RGFormsModel::update_lead($entry);
+                GFAPI::update_entry($entry);
             break;
 
             case "recurring_payment_profile_cancel" :
                 $entry["payment_status"] = "Cancelled";
-                RGFormsModel::update_lead($entry);
+                GFAPI::update_entry($entry);
                 RGFormsModel::add_note($entry["id"], $user_id, $user_name, sprintf(__("Subscription has been cancelled. Subscriber Id: %s", "gravityformspaypalpro"), $subscriber_id));
             break;
 
 
             case "recurring_payment_suspended_due_to_max_failed_payment":
-                               $entry["payment_status"] = "Failed";
-                               RGFormsModel::update_lead($entry);
-                               RGFormsModel::add_note($entry["id"], $user_id, $user_name, sprintf(__("Subscription is currently suspended as it exceeded maximum number of failed payments allowed. Subscriber Id: %s", "gravityformspaypalpro"), $subscriber_id));
+                $entry["payment_status"] = "Failed";
+                GFAPI::update_entry($entry);
+                RGFormsModel::add_note($entry["id"], $user_id, $user_name, sprintf(__("Subscription is currently suspended as it exceeded maximum number of failed payments allowed. Subscriber Id: %s", "gravityformspaypalpro"), $subscriber_id));
 
             break;
 
@@ -3160,7 +3175,7 @@ class GFPayPalPro {
                             if($entry["transaction_type"] == 1){
                                 $entry["payment_status"] = "Reversed";
                                 ////self::$log->LogDebug("Setting entry as Reversed");
-                                RGFormsModel::update_lead($entry);
+                                GFAPI::update_entry($entry);
                             }
                             RGFormsModel::add_note($entry["id"], $user_id, $user_name, sprintf(__("Payment has been reversed. Transaction Id: %s. Reason: %s", "gravityformspaypalpro"), $transaction_id, self::get_reason($reason_code)));
                         }
@@ -3174,7 +3189,7 @@ class GFPayPalPro {
                             if($entry["transaction_type"] == 1){
                                 $entry["payment_status"] = "Approved";
                                 //self::$log->LogDebug("Setting entry as approved");
-                                RGFormsModel::update_lead($entry);
+                                GFAPI::update_entry($entry);
                             }
                             RGFormsModel::add_note($entry["id"], $user_id, $user_name, sprintf(__("Payment reversal has been canceled and the funds have been transferred to your account. Transaction Id: %s", "gravityformspaypalpro"), $entry["transaction_id"]));
                         }
@@ -3188,7 +3203,7 @@ class GFPayPalPro {
                             if($entry["transaction_type"] == 1){
                                 $entry["payment_status"] = "Refunded";
                                 //self::$log->LogDebug("Setting entry as Refunded.");
-                                RGFormsModel::update_lead($entry);
+                                GFAPI::update_entry($entry);
                             }
                             RGFormsModel::add_note($entry["id"], $user_id, $user_name, sprintf(__("Payment has been refunded. Refunded amount: %s. Transaction Id: %s", "gravityformspaypalpro"), $amount, $transaction_id));
                         }
@@ -3202,7 +3217,7 @@ class GFPayPalPro {
                             if($entry["transaction_type"] == 1){
                                 $entry["payment_status"] = "Voided";
                                 //self::$log->LogDebug("Setting entry as Voided.");
-                                RGFormsModel::update_lead($entry);
+                                GFAPI::update_entry($entry);
                             }
                             RGFormsModel::add_note($entry["id"], $user_id, $user_name, sprintf(__("Authorization has been voided. Transaction Id: %s", "gravityformspaypalpro"), $transaction_id));
                         }
@@ -3427,7 +3442,7 @@ class GFPayPalPro {
         return WP_PLUGIN_DIR . "/" . $folder;
     }
 
-	public function disable_entry_info_payment( $is_enabled, $entry ) {
+	public static function disable_entry_info_payment( $is_enabled, $entry ) {
 
 		$config = self::get_config_by_entry( $entry['id'] );
 
