@@ -1,4 +1,12 @@
 -----------------------------------------------------------
+Version 1.7.2
+	- Fixed security vulnerabilities.
+
+-----------------------------------------------------------
+Version 1.7.1
+	- Fixed strings for translations
+
+-----------------------------------------------------------
 Version 1.7
     - Updated minimum Gravity Forms version to 1.9.14.
     - Updated to prevent feed processing if honeypot validation has failed or when the partial entries add-on triggers validation on a heartbeat.
