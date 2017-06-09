@@ -3,7 +3,7 @@
 Plugin Name: Gravity Forms PayPal Pro Add-On
 Plugin URI: http://www.gravityforms.com
 Description: Integrates Gravity Forms with PayPal Pro, enabling end users to purchase goods and services through Gravity Forms.
-Version: 1.7
+Version: 1.7.2
 Author: rocketgenius
 Author URI: http://www.rocketgenius.com
 Text Domain: gravityformspaypalpro
@@ -37,7 +37,7 @@ class GFPayPalPro {
     private static $path = "gravityformspaypalpro/paypalpro.php";
     private static $url = "http://www.gravityforms.com";
     private static $slug = "gravityformspaypalpro";
-    private static $version = "1.7";
+    private static $version = "1.7.2";
     private static $min_gravityforms_version = "1.9.14";
     private static $production_url = "https://api-3t.paypal.com/nvp";
     private static $sandbox_url = "https://api-3t.sandbox.paypal.com/nvp";
@@ -305,7 +305,7 @@ class GFPayPalPro {
             "paypalpro_transaction_type" => "<h6>" . __("Transaction Type", "gravityformspaypalpro") . "</h6>" . __("Select which PayPal Pro transaction type should be used. Products and Services or Subscription.", "gravityformspaypalpro"),
             "paypalpro_gravity_form" => "<h6>" . __("Gravity Form", "gravityformspaypalpro") . "</h6>" . __("Select which Gravity Forms you would like to integrate with PayPal Pro.", "gravityformspaypalpro"),
             "paypalpro_customer" => "<h6>" . __("Customer", "gravityformspaypalpro") . "</h6>" . __("Map your Form Fields to the available PayPal Pro customer information fields.", "gravityformspaypalpro"),
-            "paypalpro_page_style" => "<h6>" . __("Page Style", "gravityformspaypalpro") . "</h6>" . __("This option allows you to select which PayPal Pro page style should be used if you have setup a custom payment page style with PayPal Pro.", "gravityformspaypalpro"),
+            "paypalpro_page_style" => "<h6>" . __("Page Style", "gravityformspaypalpro") . "</h6>" . __("This option allows you to select which PayPal Pro page style should be used if you have set up a custom payment page style with PayPal Pro.", "gravityformspaypalpro"),
             "paypalpro_continue_button_label" => "<h6>" . __("Continue Button Label", "gravityformspaypalpro") . "</h6>" . __("Enter the text that should appear on the continue button once payment has been completed via PayPal Pro.", "gravityformspaypalpro"),
             "paypalpro_cancel_url" => "<h6>" . __("Cancel URL", "gravityformspaypalpro") . "</h6>" . __("Enter the URL the user should be sent to should they cancel before completing their PayPal Pro payment.", "gravityformspaypalpro"),
             "paypalpro_options" => "<h6>" . __("Options", "gravityformspaypalpro") . "</h6>" . __("Turn on or off the available PayPal Pro checkout options.", "gravityformspaypalpro"),
@@ -699,8 +699,27 @@ class GFPayPalPro {
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $API_Endpoint);
         curl_setopt($ch, CURLOPT_VERBOSE, 1);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, FALSE);
+
+        /***
+         * Determines if the cURL CURLOPT_SSL_VERIFYPEER option is enabled.
+         *
+         * @since 1.7.2
+         *
+         * @param bool is_enabled True to enable peer verification. False to bypass peer verification. Defaults to true.
+         */
+        $verify_peer = apply_filters( 'gform_paypalpro_verifypeer', true );
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, $verify_peer);
+
+        /***
+         * Determines if the cURL CURLOPT_SSL_VERIFYHOST option is enabled.
+         *
+         * @since 1.7.2
+         *
+         * @param bool is_enabled True to enable host verification. False to bypass host verification. Defaults to true.
+         */
+        $verify_host = apply_filters( 'gform_paypalpro_verifyhost', true );
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, $verify_host);
+
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_POST, 1);
 
@@ -825,9 +844,9 @@ class GFPayPalPro {
 
             <form method="post" action="">
                 <ul class="subsubsub">
-                    <li><a class="<?php echo (!RGForms::get("tab") || RGForms::get("tab") == "daily") ? "current" : "" ?>" href="?page=gf_paypalpro&view=stats&id=<?php echo $_GET["id"] ?>"><?php _e("Daily", "gravityforms"); ?></a> | </li>
-                    <li><a class="<?php echo RGForms::get("tab") == "weekly" ? "current" : ""?>" href="?page=gf_paypalpro&view=stats&id=<?php echo $_GET["id"] ?>&tab=weekly"><?php _e("Weekly", "gravityforms"); ?></a> | </li>
-                    <li><a class="<?php echo RGForms::get("tab") == "monthly" ? "current" : ""?>" href="?page=gf_paypalpro&view=stats&id=<?php echo $_GET["id"] ?>&tab=monthly"><?php _e("Monthly", "gravityforms"); ?></a></li>
+                    <li><a class="<?php echo (!RGForms::get("tab") || RGForms::get("tab") == "daily") ? "current" : "" ?>" href="?page=gf_paypalpro&view=stats&id=<?php echo absint( $_GET["id"] ) ?>"><?php _e("Daily", "gravityforms"); ?></a> | </li>
+                    <li><a class="<?php echo RGForms::get("tab") == "weekly" ? "current" : ""?>" href="?page=gf_paypalpro&view=stats&id=<?php echo absint( $_GET["id"] ) ?>&tab=weekly"><?php _e("Weekly", "gravityforms"); ?></a> | </li>
+                    <li><a class="<?php echo RGForms::get("tab") == "monthly" ? "current" : ""?>" href="?page=gf_paypalpro&view=stats&id=<?php echo absint( $_GET["id"] ) ?>&tab=monthly"><?php _e("Monthly", "gravityforms"); ?></a></li>
                 </ul>
                 <?php
                 $config = GFPayPalProData::get_feed(RGForms::get("id"));
@@ -1454,7 +1473,7 @@ class GFPayPalPro {
         $settings = get_option("gf_paypalpro_settings");
         ?>
         <form method="post" action="">
-            <input type="hidden" name="paypalpro_setting_id" value="<?php echo $id ?>" />
+            <input type="hidden" name="paypalpro_setting_id" value="<?php echo absint( $id ) ?>" />
 
             <div class="margin_vertical_10 <?php echo $is_validation_error ? "paypalpro_validation_error" : "" ?>">
                 <?php
