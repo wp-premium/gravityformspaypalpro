@@ -1,11 +1,12 @@
 <?php
 /*
 Plugin Name: Gravity Forms PayPal Pro Add-On
-Plugin URI: http://www.gravityforms.com
+Plugin URI: https://www.gravityforms.com
 Description: Integrates Gravity Forms with PayPal Pro, enabling end users to purchase goods and services through Gravity Forms.
-Version: 1.7.2
+Version: 1.8.1
 Author: rocketgenius
-Author URI: http://www.rocketgenius.com
+Author URI: https://www.rocketgenius.com
+License: GPL-2.0+
 Text Domain: gravityformspaypalpro
 Domain Path: /languages
 
@@ -37,7 +38,7 @@ class GFPayPalPro {
     private static $path = "gravityformspaypalpro/paypalpro.php";
     private static $url = "http://www.gravityforms.com";
     private static $slug = "gravityformspaypalpro";
-    private static $version = "1.7.2";
+    private static $version = "1.8.1";
     private static $min_gravityforms_version = "1.9.14";
     private static $production_url = "https://api-3t.paypal.com/nvp";
     private static $sandbox_url = "https://api-3t.sandbox.paypal.com/nvp";
@@ -717,7 +718,7 @@ class GFPayPalPro {
          *
          * @param bool is_enabled True to enable host verification. False to bypass host verification. Defaults to true.
          */
-        $verify_host = apply_filters( 'gform_paypalpro_verifyhost', true );
+        $verify_host = apply_filters( 'gform_paypalpro_verifyhost', 2 );
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, $verify_host);
 
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -998,7 +999,7 @@ class GFPayPalPro {
         <?php
     }
 
-    private function get_graph_timestamp($local_datetime){
+    private static function get_graph_timestamp($local_datetime){
         $local_timestamp = mysql2date("G", $local_datetime); //getting timestamp with timezone adjusted
         $local_date_timestamp = mysql2date("G", gmdate("Y-m-d 23:59:59", $local_timestamp)); //setting time portion of date to midnight (to match the way Javascript handles dates)
         $timestamp = ($local_date_timestamp - (24 * 60 * 60) + 1) * 1000; //adjusting timestamp for Javascript (subtracting a day and transforming it to milliseconds
@@ -1015,12 +1016,17 @@ class GFPayPalPro {
     private static function daily_chart_info($config){
         global $wpdb;
 
+		// Get entry table names and entry ID column.
+		$entry_table      = self::get_entry_table_name();
+		$entry_meta_table = self::get_entry_meta_table_name();
+		$entry_id_column  = version_compare( self::get_gravityforms_db_version(), '2.3-dev-1', '<' ) ? 'lead_id' : 'entry_id';
+
         $tz_offset = self::get_mysql_tz_offset();
         $new_sales = $config["meta"]["type"] == "subscription" ? "t.transaction_type='signup'" : "is_renewal=0";
         $results = $wpdb->get_results("SELECT CONVERT_TZ(t.date_created, '+00:00', '" . $tz_offset . "') as date, sum(t.amount) as amount_sold, sum(is_renewal and t.transaction_type='payment') as renewals, sum({$new_sales}) as new_sales
-                                        FROM {$wpdb->prefix}rg_lead l
+                                        FROM {$entry_table} l
                                         INNER JOIN {$wpdb->prefix}rg_paypalpro_transaction t ON l.id = t.entry_id
-                                        INNER JOIN {$wpdb->prefix}rg_lead_meta m ON meta_key='paypalpro_feed_id' AND m.lead_id = l.id
+                                        INNER JOIN {$entry_meta_table} m ON meta_key='paypalpro_feed_id' AND m.{$entry_id_column} = l.id
                                         WHERE m.meta_value='{$config["id"]}'
                                         GROUP BY date(date)
                                         ORDER BY payment_date desc
@@ -1086,12 +1092,17 @@ class GFPayPalPro {
     private static function weekly_chart_info($config){
             global $wpdb;
 
+            // Get entry table names and entry ID column.
+            $entry_table      = self::get_entry_table_name();
+            $entry_meta_table = self::get_entry_meta_table_name();
+            $entry_id_column  = version_compare( self::get_gravityforms_db_version(), '2.3-dev-1', '<' ) ? 'lead_id' : 'entry_id';
+
             $tz_offset = self::get_mysql_tz_offset();
             $new_sales = $config["meta"]["type"] == "subscription" ? "t.transaction_type='signup'" : "is_renewal=0";
             $results = $wpdb->get_results("SELECT yearweek(CONVERT_TZ(t.date_created, '+00:00', '" . $tz_offset . "')) week_number, sum(t.amount) as amount_sold, sum(is_renewal and t.transaction_type='payment') as renewals, sum({$new_sales}) as new_sales
-                                            FROM {$wpdb->prefix}rg_lead l
+                                            FROM {$entry_table} l
                                             INNER JOIN {$wpdb->prefix}rg_paypalpro_transaction t ON l.id = t.entry_id
-                                            INNER JOIN {$wpdb->prefix}rg_lead_meta m ON meta_key='paypalpro_feed_id' AND m.lead_id = l.id
+                                            INNER JOIN {$entry_meta_table} m ON meta_key='paypalpro_feed_id' AND m.{$entry_id_column} = l.id
                                             WHERE m.meta_value='{$config["id"]}'
                                             GROUP BY week_number
                                             ORDER BY week_number desc
@@ -1155,12 +1166,18 @@ class GFPayPalPro {
 
     private static function monthly_chart_info($config){
             global $wpdb;
-            $tz_offset = self::get_mysql_tz_offset();
+
+            // Get entry table names and entry ID column.
+            $entry_table      = self::get_entry_table_name();
+            $entry_meta_table = self::get_entry_meta_table_name();
+            $entry_id_column  = version_compare( self::get_gravityforms_db_version(), '2.3-dev-1', '<' ) ? 'lead_id' : 'entry_id';
+
+    		$tz_offset = self::get_mysql_tz_offset();
             $new_sales = $config["meta"]["type"] == "subscription" ? "t.transaction_type='signup'" : "is_renewal=0";
             $results = $wpdb->get_results("SELECT date_format(CONVERT_TZ(t.date_created, '+00:00', '" . $tz_offset . "'), '%Y-%m-02') date, sum(t.amount) as amount_sold, sum(is_renewal and t.transaction_type='payment') as renewals, sum({$new_sales}) as new_sales
-                                            FROM {$wpdb->prefix}rg_lead l
+                                            FROM {$entry_table} l
                                             INNER JOIN {$wpdb->prefix}rg_paypalpro_transaction t ON l.id = t.entry_id
-                                            INNER JOIN {$wpdb->prefix}rg_lead_meta m ON meta_key='paypalpro_feed_id' AND m.lead_id = l.id
+                                            INNER JOIN {$entry_meta_table} m ON meta_key='paypalpro_feed_id' AND m.{$entry_id_column} = l.id
                                             WHERE m.meta_value='{$config["id"]}'
                                             group by date
                                             order by date desc
@@ -3467,6 +3484,59 @@ class GFPayPalPro {
 
 		return $config ? false : $is_enabled;
 	}
+
+	/**
+	 * Get version of Gravity Forms database.
+	 *
+	 * @since  1.7.3
+	 * @access public
+	 *
+	 * @uses   GFFormsModel::get_database_version()
+	 *
+	 * @return string
+	 */
+	public static function get_gravityforms_db_version() {
+
+		return method_exists( 'GFFormsModel', 'get_database_version' ) ? GFFormsModel::get_database_version() : GFForms::$version;
+
+	}
+
+	/**
+	 * Get name for entry table.
+	 *
+	 * @since  1.7.3
+	 * @access public
+	 *
+	 * @uses   GFFormsModel::get_entry_table_name()
+	 * @uses   GFFormsModel::get_lead_table_name()
+	 * @uses   GFPayPalPro::get_gravityforms_db_version()
+	 *
+	 * @return string
+	 */
+	public static function get_entry_table_name() {
+
+		return version_compare( self::get_gravityforms_db_version(), '2.3-dev-1', '<' ) ? GFFormsModel::get_lead_table_name() : GFFormsModel::get_entry_table_name();
+
+	}
+
+	/**
+	 * Get name for entry meta table.
+	 *
+	 * @since  1.7.3
+	 * @access public
+	 *
+	 * @uses   GFFormsModel::get_entry_meta_table_name()
+	 * @uses   GFFormsModel::get_lead_meta_table_name()
+	 * @uses   GFPayPalPro::get_gravityforms_db_version()
+	 *
+	 * @return string
+	 */
+	public static function get_entry_meta_table_name() {
+
+		return version_compare( self::get_gravityforms_db_version(), '2.3-dev-1', '<' ) ? GFFormsModel::get_lead_meta_table_name() : GFFormsModel::get_entry_meta_table_name();
+
+	}
+
 }
 
 ?>
