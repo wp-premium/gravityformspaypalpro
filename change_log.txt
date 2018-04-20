@@ -1,9 +1,12 @@
 -----------------------------------------------------------
-Version 1.7.2
-	- Fixed security vulnerabilities.
+Version 1.8.1
+	- Added GPL to plugin header
+	- Updated Plugin URI and Author URI to use https
 
 -----------------------------------------------------------
-Version 1.7.1
+Version 1.8
+	- Added support for Gravity Forms 2.3.
+	- Fixed security vulnerabilities.
 	- Fixed strings for translations
 
 -----------------------------------------------------------
